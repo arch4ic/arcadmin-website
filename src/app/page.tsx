@@ -380,7 +380,7 @@ function TerminalFrame({ children }: { children: React.ReactNode }) {
         <AsciiNav href="#install">INSTALL</AsciiNav>
         <AsciiNav href="#roadmap">ROADMAP</AsciiNav>
         <div className="ml-auto flex gap-4">
-          <AsciiLink href="https://github.com/yourusername/arcadmin" variant="cyan">GITHUB</AsciiLink>
+          <AsciiLink href="https://github.com/arch4ic/arcadmin" variant="cyan">GITHUB</AsciiLink>
           <AsciiLink href="#docs" variant="amber">DOCS</AsciiLink>
         </div>
       </div>
@@ -505,7 +505,7 @@ export default function Home() {
             
             {/* ASCII CTA Buttons */}
             <div className="flex flex-wrap gap-6 justify-center mb-8">
-              <AsciiButton href="https://github.com/yourusername/arcadmin" variant="primary" size="lg">
+              <AsciiButton href="https://github.com/arch4ic/arcadmin" variant="primary" size="lg">
                 ⟨ VIEW SOURCE ⟩
               </AsciiButton>
               <AsciiButton href="#features" variant="cyan" size="lg">
@@ -685,7 +685,7 @@ export default function Home() {
               </div>
               <div className="install-cmd">
                 <span className="glow-cyan">$</span>
-                <span className="glow">git clone https://github.com/yourusername/arcadmin.git</span>
+                <span className="glow">git clone https://github.com/arch4ic/arcadmin.git</span>
               </div>
               
               <div className="install-line mt-4">
@@ -773,7 +773,7 @@ export default function Home() {
 └─────────────────┘`}</pre>
               
               <div className="flex gap-6 text-sm">
-                <AsciiLink href="https://github.com/yourusername/arcadmin" variant="cyan">GitHub</AsciiLink>
+                <AsciiLink href="https://github.com/arch4ic/arcadmin" variant="cyan">GitHub</AsciiLink>
                 <AsciiLink href="#" variant="amber">Docs</AsciiLink>
                 <AsciiLink href="#" variant="primary">License</AsciiLink>
               </div>
