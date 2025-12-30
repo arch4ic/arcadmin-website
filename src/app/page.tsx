@@ -177,7 +177,7 @@ const DEMO_COMMANDS = [
   { prompt: "root@server01:~#", cmd: "docker ps --format 'table {{.Names}}\\t{{.Status}}'", output: "NAMES          STATUS\nnginx-proxy    Up 15 days\npostgres-db    Up 15 days\nredis-cache    Up 15 days" },
 ];
 
-function BootSequence({ onComplete }: { onComplete: () => void }) {
+function BootSequenceContent({ onComplete }: { onComplete: () => void }) {
   const [lines, setLines] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -195,35 +195,25 @@ function BootSequence({ onComplete }: { onComplete: () => void }) {
   }, [currentIndex, onComplete]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="terminal-window w-full max-w-3xl">
-        <div className="terminal-header">
-          <div className="terminal-button close"></div>
-          <div className="terminal-button minimize"></div>
-          <div className="terminal-button maximize"></div>
-          <div className="terminal-title">ARCADMIN BOOT SEQUENCE</div>
-        </div>
-        <div className="p-6 font-mono text-sm leading-relaxed min-h-[400px]">
-          {lines.map((line, idx) => (
-            <div key={idx} className="boot-line" style={{ animationDelay: `${idx * 0.05}s` }}>
-              {line.includes("[OK]") ? (
-                <>
-                  {line.replace("[OK]", "")}
-                  <span className="text-[#33ff33]">[OK]</span>
-                </>
-              ) : line.includes("arcadmin") && idx === 10 ? (
-                <span className="glow-amber">{line}</span>
-              ) : (
-                line
-              )}
-            </div>
-          ))}
-          {currentIndex < BOOT_MESSAGES.length && (
-            <span className="cursor"></span>
+    <>
+      {lines.map((line, idx) => (
+        <div key={idx} className="boot-line" style={{ animationDelay: `${idx * 0.05}s` }}>
+          {line.includes("[OK]") ? (
+            <>
+              {line.replace("[OK]", "")}
+              <span className="text-[#33ff33]">[OK]</span>
+            </>
+          ) : line.includes("arcadmin") && idx === 10 ? (
+            <span className="glow-amber">{line}</span>
+          ) : (
+            line
           )}
         </div>
-      </div>
-    </div>
+      ))}
+      {currentIndex < BOOT_MESSAGES.length && (
+        <span className="cursor"></span>
+      )}
+    </>
   );
 }
 
@@ -429,7 +419,7 @@ export default function Home() {
   const [bootComplete, setBootComplete] = useState(false);
   const [skipBoot, setSkipBoot] = useState(false);
 
-  // Ensure component only renders on client to avoid hydration mismatch
+  // Ensure component only renders dynamic content on client
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -447,22 +437,31 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, [mounted]);
 
-  // Show nothing during SSR to prevent hydration mismatch
-  if (!mounted) {
-    return (
-      <div className="crt-screen">
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-[#33ff33] glow">Initializing...</div>
-        </div>
-      </div>
-    );
-  }
-
+  // Show boot sequence shell during SSR (will animate once JS loads)
   if (!bootComplete && !skipBoot) {
     return (
       <div className="crt-screen" onClick={() => { setSkipBoot(true); setBootComplete(true); }}>
-        <MatrixRain />
-        <BootSequence onComplete={() => setBootComplete(true)} />
+        {mounted && <MatrixRain />}
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="terminal-window w-full max-w-3xl">
+            <div className="terminal-header">
+              <div className="terminal-button close"></div>
+              <div className="terminal-button minimize"></div>
+              <div className="terminal-button maximize"></div>
+              <div className="terminal-title">ARCADMIN BOOT SEQUENCE</div>
+            </div>
+            <div className="p-6 font-mono text-sm leading-relaxed min-h-[400px]">
+              {mounted ? (
+                <BootSequenceContent onComplete={() => setBootComplete(true)} />
+              ) : (
+                <div className="boot-line">
+                  <span className="glow">BIOS Date 12/30/25 Ver: 1.0.0</span>
+                  <span className="cursor"></span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 text-[#666] text-xs">
           Press any key or click to skip...
         </div>
