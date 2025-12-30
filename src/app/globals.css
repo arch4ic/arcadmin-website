@@ -636,6 +636,24 @@ button:has(.ascii-button) {
   pointer-events: none;
   z-index: -1;
   opacity: 0.03;
+  overflow: hidden;
+}
+
+.matrix-grid {
+  font-family: 'IBM VGA', 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--term-green);
+}
+
+.matrix-row {
+  white-space: nowrap;
+}
+
+.matrix-char {
+  display: inline-block;
+  width: 12px;
+  text-align: center;
 }
 
 /* Selection styling */

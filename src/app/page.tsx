@@ -316,18 +316,33 @@ function TerminalDemo() {
 }
 
 function MatrixRain() {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render anything on server to avoid hydration mismatch
+  if (!mounted) {
+    return <div className="matrix-bg" />;
+  }
+
+  // Create a deterministic pattern of 0s and 1s
+  const pattern = "10110100101101001011010010110100";
+  
   return (
     <div className="matrix-bg">
-      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="matrix" width="20" height="20" patternUnits="userSpaceOnUse">
-            <text x="0" y="15" fill="#33ff33" fontSize="12" fontFamily="monospace" opacity="0.3">
-              {Math.random() > 0.5 ? "1" : "0"}
-            </text>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#matrix)" />
-      </svg>
+      <div className="matrix-grid">
+        {Array.from({ length: 50 }).map((_, row) => (
+          <div key={row} className="matrix-row">
+            {Array.from({ length: 80 }).map((_, col) => (
+              <span key={col} className="matrix-char">
+                {pattern[(row + col) % pattern.length]}
+              </span>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -410,10 +425,18 @@ function TerminalFrame({ children }: { children: React.ReactNode }) {
 }
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
   const [bootComplete, setBootComplete] = useState(false);
   const [skipBoot, setSkipBoot] = useState(false);
 
+  // Ensure component only renders on client to avoid hydration mismatch
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === "Escape" || e.key === " " || e.key === "Enter") {
         setSkipBoot(true);
@@ -422,7 +445,18 @@ export default function Home() {
     };
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, []);
+  }, [mounted]);
+
+  // Show nothing during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="crt-screen">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-[#33ff33] glow">Initializing...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (!bootComplete && !skipBoot) {
     return (
