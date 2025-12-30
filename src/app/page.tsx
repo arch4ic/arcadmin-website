@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const ASCII_LOGO = `
  █████╗ ██████╗  ██████╗ █████╗ ██████╗ ███╗   ███╗██╗███╗   ██╗
@@ -43,39 +43,127 @@ const BOOT_MESSAGES = [
   { text: "System ready. Type 'help' for available commands.", delay: 200 },
 ];
 
+// ASCII Button Component - Clickable ASCII text
+interface AsciiButtonProps {
+  children: React.ReactNode;
+  href?: string;
+  onClick?: () => void;
+  variant?: "primary" | "secondary" | "danger" | "cyan";
+  size?: "sm" | "md" | "lg";
+}
+
+function AsciiButton({ children, href, onClick, variant = "primary", size = "md" }: AsciiButtonProps) {
+  const colors = {
+    primary: "glow",
+    secondary: "glow-amber", 
+    danger: "glow-red",
+    cyan: "glow-cyan"
+  };
+  
+  const sizes = {
+    sm: "text-xs",
+    md: "text-sm",
+    lg: "text-base"
+  };
+
+  const content = (
+    <span className={`ascii-button ${colors[variant]} ${sizes[size]}`}>
+      {`[ ${children} ]`}
+    </span>
+  );
+
+  if (href) {
+    return (
+      <a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <button onClick={onClick} className="bg-transparent border-none cursor-pointer">
+      {content}
+    </button>
+  );
+}
+
+// ASCII Link - Inline clickable text
+interface AsciiLinkProps {
+  children: React.ReactNode;
+  href: string;
+  variant?: "primary" | "cyan" | "amber";
+}
+
+function AsciiLink({ children, href, variant = "cyan" }: AsciiLinkProps) {
+  const colors = {
+    primary: "glow",
+    cyan: "glow-cyan",
+    amber: "glow-amber"
+  };
+  
+  return (
+    <a 
+      href={href} 
+      target={href.startsWith("http") ? "_blank" : undefined} 
+      rel="noopener noreferrer"
+      className={`ascii-link ${colors[variant]}`}
+    >
+      {`<${children}>`}
+    </a>
+  );
+}
+
+// ASCII Nav Item
+interface AsciiNavProps {
+  children: React.ReactNode;
+  href: string;
+  active?: boolean;
+}
+
+function AsciiNav({ children, href, active }: AsciiNavProps) {
+  return (
+    <a 
+      href={href} 
+      className={`ascii-nav ${active ? 'active' : ''}`}
+    >
+      {active ? `>[${children}]<` : `[${children}]`}
+    </a>
+  );
+}
+
 const FEATURES = [
   {
-    icon: "⚡",
+    icon: "[ ⚡ ]",
     title: "Agentless Architecture",
     description: "Execute commands on remote targets via persistent SSH sessions. No software installation required on target machines.",
     command: "ssh user@target",
   },
   {
-    icon: "🔄",
+    icon: "[ ↻ ]",
     title: "Stateful Execution",
     description: "Maintains shell state across multiple commands. Working directory, environment variables - all preserved.",
     command: "cd /app && export ENV=prod",
   },
   {
-    icon: "🔐",
+    icon: "[ ⚿ ]",
     title: "Interactive Auth",
     description: "Seamlessly handles password prompts. Control handed to user when authentication is required.",
     command: "sudo systemctl restart nginx",
   },
   {
-    icon: "🛡️",
+    icon: "[ ◈ ]",
     title: "Deterministic Safety",
     description: "Three-tier validation: autorun, requires_permission, denylist. Only safe commands pass through.",
     command: "validate --strict cmd",
   },
   {
-    icon: "📊",
+    icon: "[ ▤ ]",
     title: "Structured Results",
     description: "Detailed RemoteCommandResult objects with exit codes, stdout, and execution duration.",
     command: "result.exit_code == 0",
   },
   {
-    icon: "🤖",
+    icon: "[ ◉ ]",
     title: "LLM-Ready Transcripts",
     description: "Automatically generates execution transcripts optimized for LLM Brain integration.",
     command: "transcript.to_llm()",
@@ -244,6 +332,83 @@ function MatrixRain() {
   );
 }
 
+// Main Terminal Frame Component
+function TerminalFrame({ children }: { children: React.ReactNode }) {
+  const [time, setTime] = useState(new Date());
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const timeStr = time.toLocaleTimeString('en-US', { hour12: false });
+  const dateStr = time.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' });
+
+  return (
+    <div className="terminal-frame">
+      {/* Terminal Title Bar */}
+      <div className="terminal-titlebar">
+        <div className="titlebar-left">
+          <span className="titlebar-buttons">
+            <span className="btn-close">×</span>
+            <span className="btn-min">−</span>
+            <span className="btn-max">□</span>
+          </span>
+        </div>
+        <div className="titlebar-center">
+          <span className="glow">arcadmin@swarm:~</span>
+        </div>
+        <div className="titlebar-right">
+          <span className="text-[#666]">{dateStr}</span>
+          <span className="glow-amber">{timeStr}</span>
+        </div>
+      </div>
+      
+      {/* Terminal Menu Bar */}
+      <div className="terminal-menubar">
+        <AsciiNav href="#home" active>HOME</AsciiNav>
+        <AsciiNav href="#features">FEATURES</AsciiNav>
+        <AsciiNav href="#architecture">ARCH</AsciiNav>
+        <AsciiNav href="#demo">DEMO</AsciiNav>
+        <AsciiNav href="#safety">SAFETY</AsciiNav>
+        <AsciiNav href="#install">INSTALL</AsciiNav>
+        <AsciiNav href="#roadmap">ROADMAP</AsciiNav>
+        <div className="ml-auto flex gap-4">
+          <AsciiLink href="https://github.com/yourusername/arcadmin" variant="cyan">GITHUB</AsciiLink>
+          <AsciiLink href="#docs" variant="amber">DOCS</AsciiLink>
+        </div>
+      </div>
+
+      {/* Terminal Content Area */}
+      <div className="terminal-content" ref={contentRef}>
+        {children}
+      </div>
+
+      {/* Terminal Status Bar */}
+      <div className="terminal-statusbar">
+        <div className="statusbar-left">
+          <span className="text-[#33ff33]">●</span>
+          <span className="text-[#666]">SSH: Connected</span>
+          <span className="text-[#666]">│</span>
+          <span className="text-[#ffb000]">↑↓</span>
+          <span className="text-[#666]">2.4KB/s</span>
+        </div>
+        <div className="statusbar-center">
+          <span className="text-[#666]">─────────────</span>
+          <span className="glow-cyan"> ARCADMIN v1.0.0 </span>
+          <span className="text-[#666]">─────────────</span>
+        </div>
+        <div className="statusbar-right">
+          <span className="text-[#666]">PID: 31337</span>
+          <span className="text-[#666]">│</span>
+          <span className="text-[#33ff33]">MEM: 64MB</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [bootComplete, setBootComplete] = useState(false);
   const [skipBoot, setSkipBoot] = useState(false);
@@ -272,310 +437,328 @@ export default function Home() {
   }
 
   return (
-    <div className="crt-screen">
+    <div className="crt-screen terminal-outer">
       <MatrixRain />
       
-      {/* Hero Section */}
-      <section className="min-h-screen flex flex-col items-center justify-center px-4 py-16 relative">
-        <div className="text-center max-w-5xl mx-auto">
-          {/* ASCII Logo */}
-          <pre className="ascii-art glow text-center mx-auto mb-8 overflow-x-auto">
-            {ASCII_LOGO}
-          </pre>
-          
-          {/* Tagline */}
-          <h2 className="text-lg md:text-xl mb-6 glow-amber tracking-wider">
-            DISTRIBUTED SYSADMIN AGENT SWARM
-          </h2>
-          
-          {/* Description */}
-          <p className="text-[#888] max-w-2xl mx-auto mb-8 leading-relaxed">
-            A lightweight, extensible, and distributed system administration agent in Python.
-            Execute commands on remote targets through persistent SSH sessions without deploying any software.
-          </p>
-          
-          {/* CTA Buttons */}
-          <div className="flex flex-wrap gap-4 justify-center mb-12">
-            <a 
-              href="https://github.com/yourusername/arcadmin" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="term-button flex items-center gap-2"
-            >
-              <span>⟨</span> VIEW SOURCE <span>⟩</span>
-            </a>
-            <a 
-              href="#features" 
-              className="term-button flex items-center gap-2"
-              style={{ borderColor: "var(--term-cyan)", color: "var(--term-cyan)" }}
-            >
-              <span>↓</span> EXPLORE FEATURES
-            </a>
+      <TerminalFrame>
+        {/* Hero Section */}
+        <section id="home" className="terminal-section">
+          <div className="section-header">
+            <span className="text-[#666]">┌──────────────────────────────────────────────────────────────┐</span>
+            <div className="text-center glow-cyan">WELCOME TO ARCADMIN CONTROL CENTER</div>
+            <span className="text-[#666]">└──────────────────────────────────────────────────────────────┘</span>
           </div>
+          
+          <div className="text-center py-8">
+            {/* ASCII Logo */}
+            <pre className="ascii-art glow text-center mx-auto mb-6 overflow-x-auto">
+              {ASCII_LOGO}
+            </pre>
+            
+            {/* Tagline */}
+            <div className="mb-6">
+              <span className="text-[#666]">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+              <h2 className="text-lg md:text-xl glow-amber tracking-wider py-2">
+                DISTRIBUTED SYSADMIN AGENT SWARM
+              </h2>
+              <span className="text-[#666]">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>
+            </div>
+            
+            {/* Description */}
+            <p className="text-[#888] max-w-2xl mx-auto mb-8 leading-relaxed px-4">
+              A lightweight, extensible, and distributed system administration agent in Python.
+              Execute commands on remote targets through persistent SSH sessions without deploying any software.
+            </p>
+            
+            {/* ASCII CTA Buttons */}
+            <div className="flex flex-wrap gap-6 justify-center mb-8">
+              <AsciiButton href="https://github.com/yourusername/arcadmin" variant="primary" size="lg">
+                ⟨ VIEW SOURCE ⟩
+              </AsciiButton>
+              <AsciiButton href="#features" variant="cyan" size="lg">
+                ↓ EXPLORE FEATURES
+              </AsciiButton>
+            </div>
 
-          {/* Quick Install */}
-          <div className="code-block max-w-md mx-auto text-left">
-            <div className="text-[#666] text-xs mb-2"># Quick Install</div>
-            <div className="flex items-center gap-2">
-              <span className="glow-cyan">$</span>
-              <code className="glow">pip install arcadmin</code>
+            {/* Quick Install */}
+            <div className="inline-block text-left bg-black/40 border border-[#1a991a]/50 p-4">
+              <div className="text-[#666] text-xs mb-2"># Quick Install</div>
+              <div className="flex items-center gap-2">
+                <span className="glow-cyan">$</span>
+                <code className="glow">pip install arcadmin</code>
+                <AsciiButton onClick={() => navigator.clipboard.writeText('pip install arcadmin')} variant="secondary" size="sm">
+                  COPY
+                </AsciiButton>
+              </div>
             </div>
           </div>
-        </div>
-        
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-          <span className="text-[#666] text-2xl">⌄</span>
-        </div>
-      </section>
+        </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-3xl glow mb-4 tracking-wide">
-              ══════ SYSTEM CAPABILITIES ══════
-            </h2>
-            <p className="text-[#666]">Core features that make arcadmin powerful</p>
+        {/* Features Section */}
+        <section id="features" className="terminal-section">
+          <div className="section-header">
+            <span className="text-[#666]">╔══════════════════════════════════════════════════════════════╗</span>
+            <div className="text-center glow py-2">▶ SYSTEM CAPABILITIES ◀</div>
+            <span className="text-[#666]">╚══════════════════════════════════════════════════════════════╝</span>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 stagger-children">
             {FEATURES.map((feature, idx) => (
-              <div key={idx} className="feature-card">
-                <div className="text-3xl mb-4">{feature.icon}</div>
-                <h3 className="text-lg glow-amber mb-3 tracking-wide">{feature.title}</h3>
-                <p className="text-[#888] text-sm mb-4 leading-relaxed">{feature.description}</p>
-                <code className="text-xs text-[#666] block bg-black/30 p-2 rounded">
+              <div key={idx} className="feature-card-ascii">
+                <div className="feature-header">
+                  <span className="glow text-lg">{feature.icon}</span>
+                  <span className="glow-amber">{feature.title}</span>
+                </div>
+                <div className="feature-border">├{'─'.repeat(40)}┤</div>
+                <p className="text-[#888] text-sm mb-3 leading-relaxed">{feature.description}</p>
+                <code className="text-xs block bg-black/40 p-2 border-l-2 border-[#33ff33]">
                   <span className="glow-cyan">$</span> {feature.command}
                 </code>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Architecture Section */}
-      <section className="py-20 px-4 bg-black/30">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-3xl glow mb-4 tracking-wide">
-              ══════ SWARM ARCHITECTURE ══════
-            </h2>
-            <p className="text-[#666]">Distributed execution across multiple nodes</p>
+        {/* Architecture Section */}
+        <section id="architecture" className="terminal-section bg-black/30">
+          <div className="section-header">
+            <span className="text-[#666]">╔══════════════════════════════════════════════════════════════╗</span>
+            <div className="text-center glow py-2">▶ SWARM ARCHITECTURE ◀</div>
+            <span className="text-[#666]">╚══════════════════════════════════════════════════════════════╝</span>
           </div>
           
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 p-6 items-center">
             <pre className="ascii-art text-center glow text-[0.6rem] md:text-xs leading-relaxed mx-auto">
               {SWARM_ASCII}
             </pre>
             
-            <div className="space-y-6">
-              <div className="feature-card">
-                <h3 className="glow-cyan mb-2">src/nodes/executor.py</h3>
-                <p className="text-[#888] text-sm">
+            <div className="space-y-4">
+              <div className="feature-card-ascii">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[#666]">├─►</span>
+                  <span className="glow-cyan">src/nodes/executor.py</span>
+                </div>
+                <p className="text-[#888] text-sm pl-6">
                   Manages persistent SSH connections using <code className="text-[#ffb000]">pexpect</code> and 
-                  a sentinel pattern for stateful execution across sessions.
+                  a sentinel pattern for stateful execution.
                 </p>
               </div>
-              <div className="feature-card">
-                <h3 className="glow-cyan mb-2">src/nodes/validator.py</h3>
-                <p className="text-[#888] text-sm">
+              <div className="feature-card-ascii">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[#666]">├─►</span>
+                  <span className="glow-cyan">src/nodes/validator.py</span>
+                </div>
+                <p className="text-[#888] text-sm pl-6">
                   Deterministic safety gate that validates commands against <code className="text-[#ffb000]">config.yaml</code> policies.
                 </p>
               </div>
-              <div className="feature-card">
-                <h3 className="glow-cyan mb-2">config.yaml</h3>
-                <p className="text-[#888] text-sm">
-                  Centralized policy for command categorization: <code className="text-[#33ff33]">autorun</code>, 
-                  <code className="text-[#ffb000]"> requires_permission</code>, 
-                  <code className="text-[#ff3333]"> denylist</code>.
+              <div className="feature-card-ascii">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[#666]">└─►</span>
+                  <span className="glow-cyan">config.yaml</span>
+                </div>
+                <p className="text-[#888] text-sm pl-6">
+                  Centralized policy for command categorization: 
+                  <span className="text-[#33ff33]"> autorun</span>,
+                  <span className="text-[#ffb000]"> permission</span>,
+                  <span className="text-[#ff3333]"> deny</span>.
                 </p>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Live Demo Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-3xl glow mb-4 tracking-wide">
-              ══════ LIVE TERMINAL ══════
-            </h2>
-            <p className="text-[#666]">Watch arcadmin in action</p>
+        {/* Live Demo Section */}
+        <section id="demo" className="terminal-section">
+          <div className="section-header">
+            <span className="text-[#666]">╔══════════════════════════════════════════════════════════════╗</span>
+            <div className="text-center glow py-2">▶ LIVE TERMINAL DEMO ◀</div>
+            <span className="text-[#666]">╚══════════════════════════════════════════════════════════════╝</span>
           </div>
           
-          <TerminalDemo />
-        </div>
-      </section>
+          <div className="p-6 max-w-3xl mx-auto">
+            <TerminalDemo />
+          </div>
+        </section>
 
-      {/* Safety Section */}
-      <section className="py-20 px-4 bg-black/30">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-3xl glow mb-4 tracking-wide">
-              ══════ SAFETY PROTOCOLS ══════
-            </h2>
-            <p className="text-[#666]">Three-tier command validation system</p>
+        {/* Safety Section */}
+        <section id="safety" className="terminal-section bg-black/30">
+          <div className="section-header">
+            <span className="text-[#666]">╔══════════════════════════════════════════════════════════════╗</span>
+            <div className="text-center glow py-2">▶ SAFETY PROTOCOLS ◀</div>
+            <span className="text-[#666]">╚══════════════════════════════════════════════════════════════╝</span>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="feature-card border-[#33ff33]/50">
-              <div className="text-[#33ff33] text-sm mb-2">▓▓▓ AUTORUN ▓▓▓</div>
-              <h3 className="glow text-lg mb-3">Safe Commands</h3>
-              <p className="text-[#888] text-sm mb-4">Automatically executed without confirmation</p>
+          <div className="grid md:grid-cols-3 gap-4 p-6">
+            <div className="safety-card safe">
+              <pre className="text-[#33ff33] text-xs text-center mb-3">{`
+┌─────────────────┐
+│   ◈ AUTORUN ◈   │
+│    SAFE CMDS    │
+└─────────────────┘`}</pre>
+              <p className="text-[#888] text-sm mb-3 text-center">Auto-executed without confirmation</p>
               <div className="space-y-1 text-xs">
-                <div className="text-[#33ff33]">• uname -a</div>
-                <div className="text-[#33ff33]">• df -h</div>
-                <div className="text-[#33ff33]">• ps aux</div>
-                <div className="text-[#33ff33]">• docker ps</div>
+                <div className="cmd-safe">├─ uname -a</div>
+                <div className="cmd-safe">├─ df -h</div>
+                <div className="cmd-safe">├─ ps aux</div>
+                <div className="cmd-safe">└─ docker ps</div>
               </div>
             </div>
             
-            <div className="feature-card border-[#ffb000]/50">
-              <div className="text-[#ffb000] text-sm mb-2">▓▓▓ PERMISSION ▓▓▓</div>
-              <h3 className="glow-amber text-lg mb-3">Requires Approval</h3>
-              <p className="text-[#888] text-sm mb-4">User confirmation needed before execution</p>
+            <div className="safety-card warning">
+              <pre className="text-[#ffb000] text-xs text-center mb-3">{`
+┌─────────────────┐
+│ ◈ PERMISSION ◈  │
+│  NEEDS CONFIRM  │
+└─────────────────┘`}</pre>
+              <p className="text-[#888] text-sm mb-3 text-center">User approval required</p>
               <div className="space-y-1 text-xs">
-                <div className="text-[#ffb000]">• systemctl restart</div>
-                <div className="text-[#ffb000]">• apt update</div>
-                <div className="text-[#ffb000]">• docker run</div>
-                <div className="text-[#ffb000]">• tail /var/log/*</div>
+                <div className="cmd-warn">├─ systemctl restart</div>
+                <div className="cmd-warn">├─ apt update</div>
+                <div className="cmd-warn">├─ docker run</div>
+                <div className="cmd-warn">└─ tail /var/log/*</div>
               </div>
             </div>
             
-            <div className="feature-card border-[#ff3333]/50">
-              <div className="text-[#ff3333] text-sm mb-2">▓▓▓ DENYLIST ▓▓▓</div>
-              <h3 className="glow-red text-lg mb-3">Blocked Commands</h3>
-              <p className="text-[#888] text-sm mb-4">Never executed under any circumstances</p>
+            <div className="safety-card danger">
+              <pre className="text-[#ff3333] text-xs text-center mb-3">{`
+┌─────────────────┐
+│  ◈ DENYLIST ◈   │
+│    BLOCKED!     │
+└─────────────────┘`}</pre>
+              <p className="text-[#888] text-sm mb-3 text-center">Never executed</p>
               <div className="space-y-1 text-xs">
-                <div className="text-[#ff3333]">• rm -rf /</div>
-                <div className="text-[#ff3333]">• mkfs.ext4 /dev/sda</div>
-                <div className="text-[#ff3333]">• chmod -R 777 /</div>
-                <div className="text-[#ff3333]">• {`:(){ :|:& };:`}</div>
+                <div className="cmd-danger">├─ rm -rf /</div>
+                <div className="cmd-danger">├─ mkfs.ext4 /dev/sda</div>
+                <div className="cmd-danger">├─ chmod -R 777 /</div>
+                <div className="cmd-danger">└─ {`:(){ :|:& };:`}</div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Getting Started Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-3xl glow mb-4 tracking-wide">
-              ══════ GETTING STARTED ══════
-            </h2>
-            <p className="text-[#666]">Up and running in minutes</p>
+        {/* Getting Started Section */}
+        <section id="install" className="terminal-section">
+          <div className="section-header">
+            <span className="text-[#666]">╔══════════════════════════════════════════════════════════════╗</span>
+            <div className="text-center glow py-2">▶ INSTALLATION GUIDE ◀</div>
+            <span className="text-[#666]">╚══════════════════════════════════════════════════════════════╝</span>
           </div>
           
-          <div className="terminal-window">
-            <div className="terminal-header">
-              <div className="terminal-button close"></div>
-              <div className="terminal-button minimize"></div>
-              <div className="terminal-button maximize"></div>
-              <div className="terminal-title">installation</div>
-            </div>
-            <div className="p-6 space-y-4 text-sm">
-              <div>
-                <div className="text-[#666] text-xs mb-2"># 1. Clone the repository</div>
-                <div><span className="glow-cyan">$</span> <span className="glow">git clone https://github.com/yourusername/arcadmin.git</span></div>
+          <div className="p-6 max-w-2xl mx-auto">
+            <div className="install-terminal">
+              <div className="install-line">
+                <span className="text-[#666] text-xs"># 1. Clone the repository</span>
               </div>
-              <div>
-                <div className="text-[#666] text-xs mb-2"># 2. Set up virtual environment</div>
-                <div><span className="glow-cyan">$</span> <span className="glow">cd arcadmin && python -m venv venv</span></div>
-                <div><span className="glow-cyan">$</span> <span className="glow">source venv/bin/activate</span></div>
+              <div className="install-cmd">
+                <span className="glow-cyan">$</span>
+                <span className="glow">git clone https://github.com/yourusername/arcadmin.git</span>
               </div>
-              <div>
-                <div className="text-[#666] text-xs mb-2"># 3. Install dependencies</div>
-                <div><span className="glow-cyan">$</span> <span className="glow">pip install -r requirements.txt</span></div>
+              
+              <div className="install-line mt-4">
+                <span className="text-[#666] text-xs"># 2. Set up virtual environment</span>
               </div>
-              <div>
-                <div className="text-[#666] text-xs mb-2"># 4. Configure policies</div>
-                <div><span className="glow-cyan">$</span> <span className="glow">vim config.yaml</span></div>
+              <div className="install-cmd">
+                <span className="glow-cyan">$</span>
+                <span className="glow">cd arcadmin && python -m venv venv</span>
               </div>
-              <div>
-                <div className="text-[#666] text-xs mb-2"># 5. Run tests</div>
-                <div><span className="glow-cyan">$</span> <span className="glow">python3 tests/test_executor.py</span></div>
+              <div className="install-cmd">
+                <span className="glow-cyan">$</span>
+                <span className="glow">source venv/bin/activate</span>
+              </div>
+              
+              <div className="install-line mt-4">
+                <span className="text-[#666] text-xs"># 3. Install dependencies</span>
+              </div>
+              <div className="install-cmd">
+                <span className="glow-cyan">$</span>
+                <span className="glow">pip install -r requirements.txt</span>
+              </div>
+              
+              <div className="install-line mt-4">
+                <span className="text-[#666] text-xs"># 4. Configure & run</span>
+              </div>
+              <div className="install-cmd">
+                <span className="glow-cyan">$</span>
+                <span className="glow">vim config.yaml && python3 tests/test_executor.py</span>
+              </div>
+              
+              <div className="install-result mt-4">
+                <span className="text-[#33ff33]">[OK]</span>
+                <span className="text-[#888]"> All tests passed. System ready.</span>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Future Plans Section */}
-      <section className="py-20 px-4 bg-black/30">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-3xl glow mb-4 tracking-wide">
-              ══════ ROADMAP ══════
-            </h2>
-            <p className="text-[#666]">What&apos;s coming next</p>
+        {/* Future Plans Section */}
+        <section id="roadmap" className="terminal-section bg-black/30">
+          <div className="section-header">
+            <span className="text-[#666]">╔══════════════════════════════════════════════════════════════╗</span>
+            <div className="text-center glow py-2">▶ DEVELOPMENT ROADMAP ◀</div>
+            <span className="text-[#666]">╚══════════════════════════════════════════════════════════════╝</span>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="feature-card">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-[#ffb000]">◆</span>
-                <h3 className="glow-amber">SSH Key Authentication</h3>
+          <div className="grid md:grid-cols-2 gap-4 p-6">
+            <div className="roadmap-item">
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-[#ffb000]">[▓▓▓▓░░░░░░]</span>
+                <span className="text-[#ffb000]">40%</span>
               </div>
+              <h3 className="glow-amber mb-2">SSH Key Authentication</h3>
               <p className="text-[#888] text-sm">
-                Support for SSH key-based authentication for enhanced security and automation.
+                Support for SSH key-based authentication for enhanced security.
               </p>
-              <div className="mt-3 text-xs text-[#666]">Status: <span className="text-[#ffb000]">In Progress</span></div>
+              <div className="mt-2 text-xs">
+                <AsciiButton href="#" variant="secondary" size="sm">TRACK PROGRESS</AsciiButton>
+              </div>
             </div>
             
-            <div className="feature-card">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-[#ff33ff]">◆</span>
-                <h3 className="glow-magenta">Gemini API Integration</h3>
+            <div className="roadmap-item">
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-[#ff33ff]">[▓░░░░░░░░░]</span>
+                <span className="text-[#ff33ff]">10%</span>
               </div>
+              <h3 className="glow-magenta mb-2">Gemini API Integration</h3>
               <p className="text-[#888] text-sm">
-                Integration with Gemini API for autonomous task planning and intelligent decision-making.
+                Integration with Gemini API for autonomous task planning.
               </p>
-              <div className="mt-3 text-xs text-[#666]">Status: <span className="text-[#ff33ff]">Planned</span></div>
+              <div className="mt-2 text-xs">
+                <AsciiButton href="#" variant="cyan" size="sm">VIEW SPEC</AsciiButton>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-4 border-t border-[#1a991a]/30">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="text-center md:text-left">
-              <pre className="text-xs glow leading-tight">
-{`┌─────────────────┐
+        {/* Footer */}
+        <footer className="terminal-section border-t border-[#1a991a]/30">
+          <div className="p-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <pre className="text-xs glow leading-tight">{`┌─────────────────┐
 │    ARCADMIN     │
 │    v1.0.0       │
-└─────────────────┘`}
-              </pre>
+└─────────────────┘`}</pre>
+              
+              <div className="flex gap-6 text-sm">
+                <AsciiLink href="https://github.com/yourusername/arcadmin" variant="cyan">GitHub</AsciiLink>
+                <AsciiLink href="#" variant="amber">Docs</AsciiLink>
+                <AsciiLink href="#" variant="primary">License</AsciiLink>
+              </div>
+              
+              <div className="text-[#666] text-xs text-center md:text-right">
+                <div>Built with Python & SSH</div>
+                <div className="mt-1">© 2025 arcadmin</div>
+              </div>
             </div>
             
-            <div className="flex gap-6 text-sm">
-              <a href="https://github.com/yourusername/arcadmin" className="hover:glow transition-all">
-                GitHub
-              </a>
-              <a href="#" className="hover:glow transition-all">
-                Documentation
-              </a>
-              <a href="#" className="hover:glow transition-all">
-                License
-              </a>
-            </div>
-            
-            <div className="text-[#666] text-xs text-center md:text-right">
-              <div>Built with Python & SSH</div>
-              <div className="mt-1">© 2025 arcadmin</div>
+            <div className="mt-6 pt-4 border-t border-[#1a991a]/20 text-center">
+              <code className="text-[#444] text-xs">
+                ═══════════════════ SESSION TERMINATED ═══════════════════
+              </code>
             </div>
           </div>
-          
-          <div className="mt-8 pt-8 border-t border-[#1a991a]/20 text-center text-[#444] text-xs">
-            <code>SESSION TERMINATED - GOODBYE</code>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      </TerminalFrame>
     </div>
   );
 }
